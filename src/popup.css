@@ -67,6 +67,34 @@ h1 span { color: #ff7597; }
   font-size: 12px;
 }
 
+.privacy {
+  margin: 12px 0;
+  padding: 9px 11px;
+  background: #0d1219;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+}
+.privacy strong {
+  display: block;
+  font-size: 11px;
+  color: #9aa7b4;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.privacy ul {
+  margin: 0;
+  padding-left: 15px;
+  list-style: disc;
+}
+.privacy li {
+  font-size: 10.5px;
+  line-height: 1.4;
+  color: #6b7785;
+  margin: 3px 0;
+}
+.privacy em { color: #00e5ff; font-style: normal; }
+
 #save {
   padding: 7px 16px;
   background: linear-gradient(90deg, #7c4dff, #00e5ff);
