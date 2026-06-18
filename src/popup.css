@@ -94,6 +94,15 @@ h1 span { color: #ff7597; }
   margin: 3px 0;
 }
 .privacy em { color: #00e5ff; font-style: normal; }
+.privacy .disclaimer {
+  margin: 7px 0 0;
+  padding-top: 7px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 10px;
+  font-style: italic;
+  line-height: 1.4;
+  color: #5a6573;
+}
 
 #save {
   padding: 7px 16px;
