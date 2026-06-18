@@ -24,7 +24,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     handleAsk(msg).then(sendResponse).catch((err) => {
       sendResponse({ error: String(err && err.message ? err.message : err) });
     });
-    return true; // keep the message channel open for the async response
+    return true;
   }
 });
 
@@ -44,7 +44,6 @@ async function handleAsk({ term, context }) {
     headers: {
       "Authorization": `Bearer ${apiKey}`,
       "Content-Type": "application/json",
-      // OpenRouter likes these for attribution; harmless if ignored.
       "HTTP-Referer": "https://github.com/everything-not-ai",
       "X-Title": "everything-not-ai",
     },
