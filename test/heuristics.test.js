@@ -1,6 +1,5 @@
 /**
- * everything-not-ai — heuristics tests
- *
+ * everythings
  * Plain Node, zero dependencies. Run with:
  *   node test/heuristics.test.js     (or)   npm test
  *

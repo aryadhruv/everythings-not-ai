@@ -4,11 +4,17 @@ const $ = (id) => document.getElementById(id);
 
 // Load saved state.
 chrome.storage.local.get(
-  { enabled: true, apiKey: "", model: "meta-llama/llama-3.3-70b-instruct:free" },
+  { enabled: true, apiKey: "", model: "openrouter/owl-alpha" },
   (cfg) => {
     $("enabled").checked = cfg.enabled !== false;
     $("apiKey").value = cfg.apiKey || "";
-    $("model").value = cfg.model;
+    const select = $("model");
+    // Fall back to first option if stored value no longer matches any option.
+    if ([...select.options].some((o) => o.value === cfg.model)) {
+      select.value = cfg.model;
+    } else {
+      select.selectedIndex = 0;
+    }
   }
 );
 
