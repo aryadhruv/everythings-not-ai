@@ -1,0 +1,10 @@
+{
+  "name": "everything-not-ai",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Chromium extension that reveals the real tech hiding behind the word \"AI\".",
+  "scripts": {
+    "test": "node test/heuristics.test.js"
+  },
+  "license": "MIT"
+}
