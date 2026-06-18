@@ -1,4 +1,4 @@
-# everything-not-ai
+# everything's-not-ai
 
 A Chromium extension that scans a webpage for the word **"AI"** (and friends —
 `artificial intelligence`, `machine learning`, `GPT`, `LLM`, `neural network`,

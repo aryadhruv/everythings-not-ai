@@ -35,7 +35,13 @@
         <option value="nvidia/nemotron-3-ultra-550b-a55b:free">Nvidia Nemotron 3 Ultra (free)</option>
         <option value="openai/gpt-oss-120b:free">OpenAI GPT OSS (free)</option>
         <option value="google/gemma-4-31b-it:free">Google Gemma 4 (free)</option>
+        <option value="__custom__">Custom model…</option>
       </select>
+    </label>
+    <label class="field" id="customField" hidden>
+      <span>Custom model ID</span>
+      <input type="text" id="customModel" placeholder="anthropic/claude-opus-4-8" autocomplete="off" spellcheck="false" />
+      <small class="hint">Ooh, look who sprung for the good stuff.</small>
     </label>
     <button id="save" type="button">Save</button>
     <span id="saved" class="saved" hidden>saved</span>
