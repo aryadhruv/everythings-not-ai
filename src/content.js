@@ -20,9 +20,32 @@
   let enabled = true;
   let matchCount = 0;
   let activeTooltip = null;
+  let dead = false; // set once the extension context is gone (reload/update)
 
   // matcher lives in heuristics.js so tests + content share one implementation
   const findMatches = ENA.findMatches;
+
+  // ---- extension-context liveness -----------------------------------------
+  // When the extension is reloaded/updated, content scripts already injected in
+  // open tabs keep running but lose their chrome.* bridge. Touching any chrome
+  // API then throws "Extension context invalidated". We detect that, go inert,
+  // and stop fighting the page so the only fallout is "refresh to re-enable".
+  function ctxAlive() {
+    try {
+      return !dead && !!chrome.runtime && !!chrome.runtime.id;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function teardown() {
+    if (dead) return;
+    dead = true;
+    enabled = false;
+    try { observer.disconnect(); } catch (_) {}
+    clearTimeout(pending);
+    cancelHide();
+  }
 
   // ---- DOM walking ---------------------------------------------------------
   function shouldSkip(node) {
@@ -30,7 +53,10 @@
     while (el) {
       if (SKIP_TAGS.has(el.tagName)) return true;
       if (el.isContentEditable) return true;
-      if (el.classList && el.classList.contains(MARK_CLASS)) return true;
+      // Never re-scan anything WE injected (marks, glyphs, tooltip). Otherwise
+      // our own verdict/blurb/"Ask a real AI" text gets matched and bleeds into
+      // the context we capture and send to the AI.
+      if (el.hasAttribute && el.hasAttribute("data-ena")) return true;
       el = el.parentElement;
     }
     return false;
@@ -81,6 +107,7 @@
     const guess = ENA.guessTech(context);
     const span = document.createElement("span");
     span.className = MARK_CLASS;
+    span.setAttribute("data-ena", "mark");
     span.textContent = raw;
     span.dataset.raw = raw;
     span.dataset.tech = guess.verdict;
@@ -177,6 +204,7 @@
     const conf = el.dataset.confidence;
     const tip = document.createElement("div");
     tip.className = "ena-tooltip";
+    tip.setAttribute("data-ena", "tooltip");
     tip.innerHTML = `
       <div class="ena-tt-head">
         <span class="ena-tt-raw">"${escapeHtml(el.dataset.raw)}"</span>
@@ -237,21 +265,39 @@
     out.hidden = false;
     out.textContent = "Asking...";
     btn.disabled = true;
-    chrome.runtime.sendMessage(
-      { type: "ENA_ASK_AI", term: el.dataset.raw, context: el.dataset.context },
-      (resp) => {
-        btn.disabled = false;
-        if (chrome.runtime.lastError) {
-          out.textContent = "Error: " + chrome.runtime.lastError.message;
-          return;
+
+    if (!ctxAlive()) {
+      teardown();
+      out.textContent = "Extension was reloaded. Refresh this page to re-enable.";
+      btn.disabled = true;
+      return;
+    }
+
+    try {
+      chrome.runtime.sendMessage(
+        { type: "ENA_ASK_AI", term: el.dataset.raw, context: el.dataset.context },
+        (resp) => {
+          // The callback runs later; the context can die in between.
+          if (chrome.runtime.lastError) {
+            out.textContent = "Error: " + chrome.runtime.lastError.message;
+            btn.disabled = false;
+            return;
+          }
+          if (!resp || resp.error) {
+            out.textContent = "Error: " + ((resp && resp.error) || "No response");
+            btn.disabled = false;
+            return;
+          }
+          out.textContent = resp.answer;
+          btn.disabled = false;
         }
-        if (!resp || resp.error) {
-          out.textContent = "Error: " + ((resp && resp.error) || "No response");
-          return;
-        }
-        out.textContent = resp.answer;
-      }
-    );
+      );
+    } catch (_) {
+      // Synchronous "Extension context invalidated" throw.
+      teardown();
+      out.textContent = "Extension was reloaded. Refresh this page to re-enable.";
+      btn.disabled = true;
+    }
   }
 
   function escapeHtml(s) {
@@ -264,6 +310,7 @@
   let pending = null;
   const observer = new MutationObserver((mutations) => {
     if (!enabled) return;
+    if (!ctxAlive()) { teardown(); return; }
     const roots = [];
     for (const mut of mutations) {
       for (const node of mut.addedNodes) {
