@@ -18,11 +18,11 @@ const failures = [];
 function ok(cond, name, detail) {
   if (cond) {
     passed++;
-    console.log("  \x1b[32m✓\x1b[0m " + name);
+    console.log("  \x1b[32mPASS\x1b[0m " + name);
   } else {
     failed++;
-    failures.push(name + (detail ? "  →  " + detail : ""));
-    console.log("  \x1b[31m✗\x1b[0m " + name + (detail ? "  → " + detail : ""));
+    failures.push(name + (detail ? "  ::  " + detail : ""));
+    console.log("  \x1b[31mFAIL\x1b[0m " + name + (detail ? "  :: " + detail : ""));
   }
 }
 

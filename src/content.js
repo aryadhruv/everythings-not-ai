@@ -142,81 +142,111 @@
   function onEnter(e) {
     const el = e.currentTarget;
     if (!enabled) return;
+    cancelHide();
     el.classList.add("ena-active");
-    scrambleTo(el, el.dataset.tech);
+    // Inline word only FLASHES (scrambles then settles back to itself) so its
+    // width never changes — no layout shift, no enter/leave oscillation. The
+    // real "AI -> verdict" reveal happens inside the tooltip below.
+    scrambleTo(el, el.dataset.raw);
     showTooltip(el);
   }
 
   function onLeave(e) {
-    const el = e.currentTarget;
-    el.classList.remove("ena-active");
-    scrambleTo(el, el.dataset.raw);
-    hideTooltip();
+    e.currentTarget.classList.remove("ena-active");
+    scheduleHide();
   }
 
   // ---- tooltip -------------------------------------------------------------
+  let activeEl = null;
+  let hideTimer = null;
+
+  function cancelHide() {
+    if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+  }
+  function scheduleHide() {
+    cancelHide();
+    hideTimer = setTimeout(removeTooltip, 180); // grace period to reach the tooltip
+  }
+
   function showTooltip(el) {
-    hideTooltip();
+    // Re-hovering the same word? keep the existing tooltip, just cancel its hide.
+    if (activeTooltip && activeEl === el) { cancelHide(); return; }
+    removeTooltip();
+    activeEl = el;
+
     const conf = el.dataset.confidence;
     const tip = document.createElement("div");
     tip.className = "ena-tooltip";
     tip.innerHTML = `
       <div class="ena-tt-head">
         <span class="ena-tt-raw">"${escapeHtml(el.dataset.raw)}"</span>
-        <span class="ena-tt-arrow">→</span>
-        <span class="ena-tt-tech">${escapeHtml(el.dataset.tech)}</span>
+        <span class="ena-tt-arrow">-&gt;</span>
+        <span class="ena-tt-tech">${escapeHtml(el.dataset.raw)}</span>
       </div>
       <div class="ena-tt-conf">
         <div class="ena-tt-bar"><i style="width:${conf}%"></i></div>
         <span>${conf}% hunch</span>
       </div>
       <div class="ena-tt-blurb">${escapeHtml(el.dataset.blurb)}</div>
-      <button class="ena-tt-ask" type="button">🤖 Ask a real AI</button>
+      <button class="ena-tt-ask" type="button">Ask a real AI</button>
       <div class="ena-tt-ai" hidden></div>
     `;
     document.body.appendChild(tip);
     positionTooltip(tip, el);
 
-    // keep tooltip alive while hovering it (so the button is clickable)
-    tip.addEventListener("mouseenter", () => { tip._hot = true; });
-    tip.addEventListener("mouseleave", () => { tip._hot = false; hideTooltip(); });
+    tip.addEventListener("mouseenter", cancelHide);
+    tip.addEventListener("mouseleave", scheduleHide);
     tip.querySelector(".ena-tt-ask").addEventListener("click", () => askAI(el, tip));
 
     activeTooltip = tip;
+
+    // decode-morph the verdict inside the tooltip (safe — no page layout shift)
+    scrambleTo(tip.querySelector(".ena-tt-tech"), el.dataset.tech);
   }
 
   function positionTooltip(tip, el) {
     const r = el.getBoundingClientRect();
-    const top = window.scrollY + r.bottom + 8;
+    const gap = 8;
+    const tw = tip.offsetWidth;
+    const th = tip.offsetHeight;
+
+    // default below; flip above if it would overflow the viewport bottom
+    let top = window.scrollY + r.bottom + gap;
+    if (r.bottom + gap + th > window.innerHeight && r.top - gap - th > 0) {
+      top = window.scrollY + r.top - gap - th;
+    }
+
     let left = window.scrollX + r.left;
-    left = Math.min(left, window.scrollX + window.innerWidth - tip.offsetWidth - 12);
+    const maxLeft = window.scrollX + window.innerWidth - tw - 12;
+    left = Math.min(left, maxLeft);
+    left = Math.max(window.scrollX + 8, left);
+
     tip.style.top = top + "px";
-    tip.style.left = Math.max(8, left) + "px";
+    tip.style.left = left + "px";
   }
 
-  function hideTooltip() {
-    if (activeTooltip && !activeTooltip._hot) {
-      activeTooltip.remove();
-      activeTooltip = null;
-    }
+  function removeTooltip() {
+    cancelHide();
+    if (activeTooltip) { activeTooltip.remove(); activeTooltip = null; }
+    if (activeEl) { activeEl.classList.remove("ena-active"); activeEl = null; }
   }
 
   function askAI(el, tip) {
     const out = tip.querySelector(".ena-tt-ai");
     const btn = tip.querySelector(".ena-tt-ask");
     out.hidden = false;
-    out.textContent = "Asking…";
+    out.textContent = "Asking...";
     btn.disabled = true;
     chrome.runtime.sendMessage(
       { type: "ENA_ASK_AI", term: el.dataset.raw, context: el.dataset.context },
       (resp) => {
         btn.disabled = false;
         if (chrome.runtime.lastError) {
-          out.textContent = "⚠️ " + chrome.runtime.lastError.message;
+          out.textContent = "Error: " + chrome.runtime.lastError.message;
           return;
         }
         if (!resp || resp.error) {
-          out.textContent = "⚠️ " + ((resp && resp.error) || "No response");
+          out.textContent = "Error: " + ((resp && resp.error) || "No response");
           return;
         }
         out.textContent = resp.answer;

@@ -52,7 +52,7 @@
     {
       id: "speech",
       verdict: "Speech Recognition / TTS",
-      blurb: "Audio ↔ text — ASR or text-to-speech models.",
+      blurb: "Audio to/from text - ASR or text-to-speech models.",
       signals: ["voice", "speech", "transcri", "audio", "dictation", "call", "accent",
         "pronounce", "spoken", "listen", "microphone", "podcast", "subtitle"],
     },

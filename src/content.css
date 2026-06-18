@@ -3,6 +3,7 @@
 .ena-mark {
   position: relative;
   cursor: help;
+  white-space: nowrap;
   font-weight: 600;
   border-bottom: 2px dashed rgba(0, 229, 255, 0.7);
   background: linear-gradient(transparent 60%, rgba(0, 229, 255, 0.18) 60%);
