@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "everythings not AI",
+  "version": "0.1.0",
+  "description": "Scans webpages for the word \"AI\" and reveals the actual tech probably hiding behind the buzzword.",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["https://openrouter.ai/*"],
+  "action": {
+    "default_title": "everythings not AI",
+    "default_popup": "src/popup.html"
+  },
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/heuristics.js", "src/content.js"],
+      "css": ["src/content.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+/* everything-not-ai — injected page styles */
+
+.ena-mark {
+  position: relative;
+  cursor: help;
+  white-space: nowrap;
+  font-weight: 600;
+  border-bottom: 2px dashed rgba(0, 229, 255, 0.7);
+  background: linear-gradient(transparent 60%, rgba(0, 229, 255, 0.18) 60%);
+  border-radius: 2px;
+  transition: color 0.15s ease;
+  /* one-shot entrance flicker, staggered per match */
+  animation: ena-reveal 0.5s steps(3) var(--ena-delay, 0s) 1 both;
+}
+
+.ena-mark.ena-active {
+  color: #00e5ff;
+  text-shadow: 0 0 6px rgba(0, 229, 255, 0.6);
+  background: rgba(0, 229, 255, 0.12);
+}
+
+.ena-glyph {
+  color: #00e5ff;
+  opacity: 0.85;
+}
+
+@keyframes ena-reveal {
+  0%   { opacity: 0.25; filter: blur(0.6px); }
+  40%  { opacity: 1;    filter: none; }
+  60%  { opacity: 0.4; }
+  100% { opacity: 1;    filter: none; }
+}
+
+/* ---- tooltip ------------------------------------------------------------ */
+.ena-tooltip {
+  position: absolute;
+  z-index: 2147483647;
+  width: 300px;
+  max-width: 80vw;
+  padding: 12px 14px;
+  background: #0b0e14;
+  color: #e6edf3;
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  border-radius: 10px;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(0, 229, 255, 0.08);
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  animation: ena-pop 0.14s ease-out both;
+}
+
+@keyframes ena-pop {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+.ena-tt-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.ena-tt-raw   { color: #ff7597; font-weight: 700; }
+.ena-tt-arrow { color: #6b7785; }
+.ena-tt-tech  { color: #00e5ff; font-weight: 700; }
+
+.ena-tt-conf {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #9aa7b4;
+  margin-bottom: 8px;
+}
+.ena-tt-bar {
+  flex: 1;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.ena-tt-bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #00e5ff, #7c4dff);
+  border-radius: 99px;
+}
+
+.ena-tt-blurb {
+  color: #c4cfdb;
+  margin-bottom: 10px;
+}
+
+.ena-tt-ask {
+  width: 100%;
+  padding: 7px 10px;
+  background: linear-gradient(90deg, #7c4dff, #00e5ff);
+  color: #06121a;
+  font-weight: 700;
+  font-size: 12px;
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.ena-tt-ask:disabled { opacity: 0.6; cursor: default; }
+.ena-tt-ask:hover:not(:disabled) { filter: brightness(1.08); }
+
+.ena-tt-ai {
+  margin-top: 9px;
+  padding-top: 9px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: #d7e0ea;
+  font-size: 12.5px;
+  white-space: pre-wrap;
+}

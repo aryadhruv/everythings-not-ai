@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header>
+    <h1>everythings<span> not </span>AI</h1>
+    <p class="tag">unmasking the buzzword, one page at a time</p>
+  </header>
+
+  <section class="row">
+    <label class="switch">
+      <input type="checkbox" id="enabled" />
+      <span class="slider"></span>
+    </label>
+    <div>
+      <strong>Scan this page</strong>
+      <small id="stat">—</small>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Ask a real AI <em>(optional)</em></h2>
+    <p class="hint">Uses a free model on OpenRouter. Your key is stored locally and only sent to OpenRouter.</p>
+    <label class="field">
+      <span>OpenRouter API key</span>
+      <input type="password" id="apiKey" placeholder="sk-or-v1-…" autocomplete="off" />
+    </label>
+    <label class="field">
+      <span>Model</span>
+      <select id="model">
+        <option value="openrouter/owl-alpha">OpenRouter Owl Alpha (free)</option>
+        <option value="nvidia/nemotron-3-ultra-550b-a55b:free">Nvidia Nemotron 3 Ultra (free)</option>
+        <option value="openai/gpt-oss-120b:free">OpenAI GPT OSS (free)</option>
+        <option value="google/gemma-4-31b-it:free">Google Gemma 4 (free)</option>
+      </select>
+    </label>
+    <button id="save" type="button">Save</button>
+    <span id="saved" class="saved" hidden>saved</span>
+    <p class="hint">Get a free key at <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">openrouter.ai/keys</a></p>
+  </section>
+
+  <script src="popup.js"></script>
+</body>
+</html>
