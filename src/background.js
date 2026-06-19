@@ -32,12 +32,22 @@ const SYSTEM_PROMPT = [
   "Be concrete - name the real technique or model family, for example:",
   "a fine-tuned LLM (GPT/Llama-style), a CNN image classifier, gradient-boosted",
   "trees on tabular data, a collaborative-filtering recommender, speech-to-text",
-  "(ASR), a thin wrapper over someone else's API, or just regex and if-statements.",
-  "If the text only makes grand claims with no real capability, say that plainly.",
+  "(ASR), a thin wrapper over someone else's chatbot, or just a set of hand-written",
+  "rules. Keep the wording plain - a non-technical reader should follow it.",
+  "The bigger and vaguer the claim, the more it is hiding behind the buzzword:",
+  "grand promises with zero concrete capability are a tell. Call that bluff hard -",
+  "it is marketing fog over a thin wrapper or ordinary hand-written rules.",
+  "Watch especially for OLD tech freshly relabelled 'AI' - variable-speed",
+  "compressors, thermostats, sensors, cruise control, autocomplete, sorting and",
+  "ranking. If the thing has quietly existed for years or decades, say so and",
+  "name roughly how long; the only thing 'new' is the AI sticker on the box.",
   "",
   "Answer in 1-2 short sentences of plain prose. Weave the likely tech naturally",
   "into the sentence - no labels, no 'Real tech:' prefix, no markdown, no preamble.",
-  "Stay specific; don't retreat to 'it could be many things' or repeat the marketing.",
+  "They sell it as 'AI'; call out what it actually is underneath and skewer the",
+  "gap between the breathless pitch and the plain plumbing. Be blunt and cutting,",
+  "mock the rebrand - this is an educational parody project, not a press release.",
+  "Stay specific; don't retreat to 'it could be many things'.",
 ].join("\n");
 
 // Worked examples lock the format, tone, AND that the buzzword is the >>> <<<
@@ -69,6 +79,21 @@ const FEWSHOT = [
     content:
       "It's all novelty claims and no actual capability, so this is most likely a thin " +
       "wrapper around someone else's LLM - the 'proprietary' part is usually just the prompt.",
+  },
+  {
+    role: "user",
+    content:
+      "Page title: Smart Fridge\n" +
+      "Nearest heading: AI Energy Mode\n\n" +
+      "Passage (explain the buzzword wrapped in >>> <<<):\n" +
+      '"""Save energy with >>>AI<<< Energy mode - it optimizes the compressor speed and defrost cycle based on your usage pattern."""',
+  },
+  {
+    role: "assistant",
+    content:
+      "This is variable-speed compressor control with a couple of usage-based thresholds - the " +
+      "same inverter and adaptive-defrost logic fridges have shipped for 20-odd years, now wearing " +
+      "an 'AI' sticker. Nothing is learned and nothing is new except the label.",
   },
 ];
 
