@@ -35,12 +35,9 @@ const SYSTEM_PROMPT = [
   "(ASR), a thin wrapper over someone else's API, or just regex and if-statements.",
   "If the text only makes grand claims with no real capability, say that plainly.",
   "",
-  "Output EXACTLY two short plain-text lines, nothing else:",
-  "Real tech: <specific technology or model family>",
-  "Why: <one concrete sentence grounded in the passage, dry tone ok>",
-  "",
-  "Be decisive. Never hedge with 'it could be many things'. Never repeat the",
-  "marketing back. No preamble, no markdown, no bullet lists.",
+  "Answer in 1-2 short sentences of plain prose. Weave the likely tech naturally",
+  "into the sentence - no labels, no 'Real tech:' prefix, no markdown, no preamble.",
+  "Stay specific; don't retreat to 'it could be many things' or repeat the marketing.",
 ].join("\n");
 
 // Worked examples lock the format, tone, AND that the buzzword is the >>> <<<
@@ -57,8 +54,8 @@ const FEWSHOT = [
   {
     role: "assistant",
     content:
-      "Real tech: A large language model (a fine-tuned GPT/Llama-style transformer).\n" +
-      "Why: Drafting, summarizing, and answering in natural language is text-in, text-out autocomplete.",
+      "Almost certainly a large language model - a GPT or Llama-style transformer doing " +
+      "text-in, text-out autocomplete behind the friendly 'assistant' framing.",
   },
   {
     role: "user",
@@ -70,8 +67,8 @@ const FEWSHOT = [
   {
     role: "assistant",
     content:
-      "Real tech: Most likely a thin wrapper over a third-party LLM.\n" +
-      'Why: Pure novelty claims with no described capability - the "proprietary" part is usually the prompt.',
+      "It's all novelty claims and no actual capability, so this is most likely a thin " +
+      "wrapper around someone else's LLM - the 'proprietary' part is usually just the prompt.",
   },
 ];
 
