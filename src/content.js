@@ -104,7 +104,9 @@
   }
 
   function makeMark(raw, label, context) {
-    const guess = ENA.guessTech(context);
+    // Pass the matched label too: the word itself is a strong prior (e.g. "GPT"
+    // leans LLM, "agentic" leans agent loop) even before we weigh the context.
+    const guess = ENA.guessTech(context, label);
     const span = document.createElement("span");
     span.className = MARK_CLASS;
     span.setAttribute("data-ena", "mark");
