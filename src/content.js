@@ -44,7 +44,7 @@
     enabled = false;
     try { observer.disconnect(); } catch (_) {}
     clearTimeout(pending);
-    cancelHide();
+    removeTooltip();
   }
 
   // ---- DOM walking ---------------------------------------------------------
@@ -168,37 +168,69 @@
     tick();
   }
 
+  const HOVER_DELAY_MS = 450;
+  let hoverTimer = null;
+
   function onEnter(e) {
     const el = e.currentTarget;
     if (!enabled) return;
+    if (sticky) return; // a pinned tooltip owns the page until dismissed
     cancelHide();
-    el.classList.add("ena-active");
-    // Inline word only FLASHES (scrambles then settles back to itself) so its
-    // width never changes — no layout shift, no enter/leave oscillation. The
-    // real "AI -> verdict" reveal happens inside the tooltip below.
-    scrambleTo(el, el.dataset.raw);
-    showTooltip(el);
+    clearTimeout(hoverTimer);
+    hoverTimer = setTimeout(() => {
+      el.classList.add("ena-active");
+      // inline word only flashes back to itself — no width change, no layout shift
+      scrambleTo(el, el.dataset.raw);
+      showTooltip(el);
+    }, HOVER_DELAY_MS);
   }
 
   function onLeave(e) {
+    clearTimeout(hoverTimer);
+    if (sticky) return; // keep the pinned word lit while its tooltip stays open
     e.currentTarget.classList.remove("ena-active");
     scheduleHide();
   }
 
   // ---- tooltip -------------------------------------------------------------
+  // A plain hover tooltip auto-hides when the mouse leaves. Clicking "Ask a real
+  // AI" pins it (sticky): then it stays until the close button, an outside
+  // click, or Escape, so the answer doesn't vanish mid-read.
   let activeEl = null;
   let hideTimer = null;
+  let sticky = false;
 
   function cancelHide() {
     if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
   }
   function scheduleHide() {
+    if (sticky) return;
     cancelHide();
     hideTimer = setTimeout(removeTooltip, 180); // grace period to reach the tooltip
   }
 
+  function onDocPointerDown(e) {
+    if (!activeTooltip) return;
+    if (activeTooltip.contains(e.target)) return;
+    if (activeEl && activeEl.contains(e.target)) return;
+    removeTooltip();
+  }
+  function onDocKeyDown(e) {
+    if (e.key === "Escape" && activeTooltip) removeTooltip();
+  }
+
+  // Called when "Ask a real AI" is clicked: lock the tooltip open.
+  function pinTooltip() {
+    if (sticky) return;
+    sticky = true;
+    cancelHide();
+    if (activeTooltip) activeTooltip.classList.add("ena-sticky");
+    document.addEventListener("pointerdown", onDocPointerDown, true);
+    document.addEventListener("keydown", onDocKeyDown, true);
+  }
+
   function showTooltip(el) {
-    // Re-hovering the same word? keep the existing tooltip, just cancel its hide.
+    // same word re-entered within the grace period: keep it, drop the pending hide
     if (activeTooltip && activeEl === el) { cancelHide(); return; }
     removeTooltip();
     activeEl = el;
@@ -208,6 +240,11 @@
     tip.className = "ena-tooltip";
     tip.setAttribute("data-ena", "tooltip");
     tip.innerHTML = `
+      <button class="ena-tt-close" type="button" aria-label="Close">
+        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"/>
+        </svg>
+      </button>
       <div class="ena-tt-head">
         <span class="ena-tt-raw">"${escapeHtml(el.dataset.raw)}"</span>
         <span class="ena-tt-arrow">-&gt;</span>
@@ -224,9 +261,10 @@
     document.body.appendChild(tip);
     positionTooltip(tip, el);
 
+    tip.querySelector(".ena-tt-close").addEventListener("click", removeTooltip);
+    tip.querySelector(".ena-tt-ask").addEventListener("click", () => { pinTooltip(); askAI(el, tip); });
     tip.addEventListener("mouseenter", cancelHide);
     tip.addEventListener("mouseleave", scheduleHide);
-    tip.querySelector(".ena-tt-ask").addEventListener("click", () => askAI(el, tip));
 
     activeTooltip = tip;
 
@@ -257,6 +295,9 @@
 
   function removeTooltip() {
     cancelHide();
+    document.removeEventListener("pointerdown", onDocPointerDown, true);
+    document.removeEventListener("keydown", onDocKeyDown, true);
+    sticky = false;
     if (activeTooltip) { activeTooltip.remove(); activeTooltip = null; }
     if (activeEl) { activeEl.classList.remove("ena-active"); activeEl = null; }
   }
