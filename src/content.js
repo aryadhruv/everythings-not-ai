@@ -240,23 +240,27 @@
     tip.className = "ena-tooltip";
     tip.setAttribute("data-ena", "tooltip");
     tip.innerHTML = `
-      <button class="ena-tt-close" type="button" aria-label="Close">
-        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-          <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"/>
-        </svg>
-      </button>
-      <div class="ena-tt-head">
-        <span class="ena-tt-raw">"${escapeHtml(el.dataset.raw)}"</span>
-        <span class="ena-tt-arrow">-&gt;</span>
-        <span class="ena-tt-tech">${escapeHtml(el.dataset.raw)}</span>
+      <div class="ena-tt-controls">
+        <button class="ena-tt-close" type="button" aria-label="Close">
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"/>
+          </svg>
+        </button>
       </div>
-      <div class="ena-tt-conf">
-        <div class="ena-tt-bar"><i style="width:${conf}%"></i></div>
-        <span>${conf}% hunch</span>
+      <div class="ena-tt-heuristic">
+        <div class="ena-tt-head">
+          <span class="ena-tt-raw">"${escapeHtml(el.dataset.raw)}"</span>
+          <span class="ena-tt-arrow">-&gt;</span>
+          <span class="ena-tt-tech">${escapeHtml(el.dataset.raw)}</span>
+        </div>
+        <div class="ena-tt-conf">
+          <div class="ena-tt-bar"><i style="width:${conf}%"></i></div>
+          <span>${conf}% hunch</span>
+        </div>
+        <div class="ena-tt-blurb">${escapeHtml(el.dataset.blurb)}</div>
+        <button class="ena-tt-ask" type="button">Ask a real AI</button>
       </div>
-      <div class="ena-tt-blurb">${escapeHtml(el.dataset.blurb)}</div>
-      <button class="ena-tt-ask" type="button">Ask a real AI</button>
-      <div class="ena-tt-ai" hidden></div>
+      <div class="ena-tt-ai"></div>
     `;
     document.body.appendChild(tip);
     positionTooltip(tip, el);
@@ -388,16 +392,55 @@
     };
   }
 
+  const FADE_MS = 280;
+  function fadeToAI(tip) {
+    const heuristic = tip.querySelector(".ena-tt-heuristic");
+    const out = tip.querySelector(".ena-tt-ai");
+    heuristic.classList.add("ena-fading");
+    setTimeout(() => {
+      heuristic.hidden = true;
+      // rAF pair forces a reflow before adding the class so the transition fires
+      requestAnimationFrame(() => requestAnimationFrame(() => out.classList.add("ena-tt-ai--visible")));
+    }, FADE_MS);
+  }
+
+  const ICON_CLIPBOARD = `<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M13.887 3.182c.396.037.79.08 1.183.128C16.194 3.45 17 4.414 17 5.517V16.75A2.25 2.25 0 0 1 14.75 19h-9.5A2.25 2.25 0 0 1 3 16.75V5.517c0-1.103.806-2.068 1.93-2.207.393-.048.787-.09 1.183-.128A3.001 3.001 0 0 1 9 1h2c1.373 0 2.531.923 2.887 2.182ZM7.5 4A1.5 1.5 0 0 1 9 2.5h2A1.5 1.5 0 0 1 12.5 4v.5h-5V4Z" clip-rule="evenodd"/></svg>`;
+  const ICON_CHECK = `<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>`;
+
+  function makeCopyButton(text) {
+    const btn = document.createElement("button");
+    btn.className = "ena-tt-copy";
+    btn.type = "button";
+    btn.setAttribute("aria-label", "Copy");
+    btn.setAttribute("data-ena", "copy");
+    btn.innerHTML = ICON_CLIPBOARD;
+    btn.addEventListener("click", () => {
+      navigator.clipboard.writeText(text).then(() => {
+        btn.innerHTML = ICON_CHECK;
+        btn.classList.add("ena-tt-copy--done");
+        setTimeout(() => {
+          btn.innerHTML = ICON_CLIPBOARD;
+          btn.classList.remove("ena-tt-copy--done");
+        }, 1500);
+      }).catch(() => {}); // clipboard denied — fail silently
+    });
+    return btn;
+  }
+
   function askAI(el, tip) {
     const out = tip.querySelector(".ena-tt-ai");
     const btn = tip.querySelector(".ena-tt-ask");
-    out.hidden = false;
-    out.textContent = "Asking...";
+
+    const textEl = document.createElement("span");
+    textEl.textContent = "Asking...";
+    out.appendChild(textEl);
+
     btn.disabled = true;
+    fadeToAI(tip);
 
     if (!ctxAlive()) {
       teardown();
-      out.textContent = "Extension was reloaded. Refresh this page to re-enable.";
+      textEl.textContent = "Extension was reloaded. Refresh this page to re-enable.";
       btn.disabled = true;
       return;
     }
@@ -406,25 +449,24 @@
       chrome.runtime.sendMessage(
         buildAskPayload(el),
         (resp) => {
-          // The callback runs later; the context can die in between.
           if (chrome.runtime.lastError) {
-            out.textContent = "Error: " + chrome.runtime.lastError.message;
+            textEl.textContent = "Error: " + chrome.runtime.lastError.message;
             btn.disabled = false;
             return;
           }
           if (!resp || resp.error) {
-            out.textContent = "Error: " + ((resp && resp.error) || "No response");
+            textEl.textContent = "Error: " + ((resp && resp.error) || "No response");
             btn.disabled = false;
             return;
           }
-          out.textContent = resp.answer;
+          textEl.textContent = resp.answer;
+          tip.querySelector(".ena-tt-controls").prepend(makeCopyButton(resp.answer));
           btn.disabled = false;
         }
       );
     } catch (_) {
-      // Synchronous "Extension context invalidated" throw.
       teardown();
-      out.textContent = "Extension was reloaded. Refresh this page to re-enable.";
+      textEl.textContent = "Extension was reloaded. Refresh this page to re-enable.";
       btn.disabled = true;
     }
   }
