@@ -230,8 +230,8 @@
     {
       id: "automation",
       verdict: "Automation / Rules Engine",
-      blurb: "A pile of if/else, triggers, and scheduled jobs. It automates the " +
-        "busywork - it learns nothing and it decides nothing.",
+      blurb: "A pile of hand-written rules, triggers, and scheduled jobs. It " +
+        "automates the busywork - it learns nothing and it decides nothing.",
       signals: [
         ["robotic process", 3], ["zapier", 3], ["rpa", 2], ["no-code", 2],
         ["low-code", 2], ["automat", 2], ["workflow", 1], ["webhook", 1],
@@ -276,7 +276,7 @@
     id: "marketing",
     verdict: "Probably marketing",
     blurb: "No real signal nearby. Could be plain statistics, a handful of " +
-      "if-statements, or pure hype with an 'AI' sticker slapped on it.",
+      "hand-written rules, or pure hype with an 'AI' sticker slapped on it.",
   };
 
   // Normalize each signal once, up front.

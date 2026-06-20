@@ -261,6 +261,92 @@
     if (activeEl) { activeEl.classList.remove("ena-active"); activeEl = null; }
   }
 
+  // ---- rich context for "Ask a real AI" -----------------------------------
+  // The heuristic only needs ~120 chars, but a real model does far better with
+  // the page around the word. We gather this lazily (on click) from the live
+  // DOM: page title + URL + nearest heading, plus ~100 words before and after
+  // the word, spilling into adjacent blocks when the immediate one is short.
+  const BLOCK_TAGS = new Set([
+    "P", "LI", "TD", "TH", "BLOCKQUOTE", "ARTICLE", "SECTION", "ASIDE", "MAIN",
+    "FIGCAPTION", "DD", "DT", "H1", "H2", "H3", "H4", "H5", "H6", "DIV",
+  ]);
+
+  function blockAncestor(el) {
+    let n = el.parentElement, last = el.parentElement;
+    while (n) {
+      if (BLOCK_TAGS.has(n.tagName)) return n;
+      last = n;
+      n = n.parentElement;
+    }
+    return last || el.parentElement || el;
+  }
+
+  function rangeText(setup) {
+    try {
+      const r = document.createRange();
+      setup(r);
+      return r.toString();
+    } catch (_) {
+      return "";
+    }
+  }
+  const wordsOf = (s) => (s || "").trim().split(/\s+/).filter(Boolean);
+  const lastWords = (s, n) => { const w = wordsOf(s); return w.slice(Math.max(0, w.length - n)).join(" "); };
+  const firstWords = (s, n) => wordsOf(s).slice(0, n).join(" ");
+
+  // Text from the start of the block up to the mark, then back through previous
+  // sibling blocks until we have ~n words. Keeps the LAST n (closest to word).
+  function gatherBefore(block, el, n) {
+    let acc = rangeText((r) => { r.setStart(block, 0); r.setEndBefore(el); });
+    let prev = block.previousElementSibling, hops = 0;
+    while (wordsOf(acc).length < n && prev && hops < 6) {
+      acc = (prev.textContent || "") + " " + acc;
+      prev = prev.previousElementSibling;
+      hops++;
+    }
+    return lastWords(acc, n);
+  }
+  // Mirror of gatherBefore, walking forward; keeps the FIRST n words.
+  function gatherAfter(block, el, n) {
+    let acc = rangeText((r) => { r.setStartAfter(el); r.setEnd(block, block.childNodes.length); });
+    let next = block.nextElementSibling, hops = 0;
+    while (wordsOf(acc).length < n && next && hops < 6) {
+      acc = acc + " " + (next.textContent || "");
+      next = next.nextElementSibling;
+      hops++;
+    }
+    return firstWords(acc, n);
+  }
+
+  // Closest heading earlier in the document than the mark.
+  function nearestHeading(el) {
+    let node = el;
+    while (node && node !== document.body && node.parentElement) {
+      let sib = node.previousElementSibling;
+      while (sib) {
+        if (/^H[1-6]$/.test(sib.tagName)) return sib.textContent.trim();
+        const h = sib.querySelector && sib.querySelector("h1,h2,h3,h4,h5,h6");
+        if (h) return h.textContent.trim();
+        sib = sib.previousElementSibling;
+      }
+      node = node.parentElement;
+    }
+    return "";
+  }
+
+  function buildAskPayload(el) {
+    const block = blockAncestor(el);
+    return {
+      type: "ENA_ASK_AI",
+      term: el.dataset.raw,
+      pageTitle: (document.title || "").slice(0, 200),
+      pageUrl: (location.href || "").slice(0, 300),
+      heading: nearestHeading(el).slice(0, 200),
+      before: gatherBefore(block, el, 100),
+      after: gatherAfter(block, el, 100),
+    };
+  }
+
   function askAI(el, tip) {
     const out = tip.querySelector(".ena-tt-ai");
     const btn = tip.querySelector(".ena-tt-ask");
@@ -277,7 +363,7 @@
 
     try {
       chrome.runtime.sendMessage(
-        { type: "ENA_ASK_AI", term: el.dataset.raw, context: el.dataset.context },
+        buildAskPayload(el),
         (resp) => {
           // The callback runs later; the context can die in between.
           if (chrome.runtime.lastError) {
