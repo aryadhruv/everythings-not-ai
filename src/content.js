@@ -174,6 +174,7 @@
   function onEnter(e) {
     const el = e.currentTarget;
     if (!enabled) return;
+    if (sticky) return; // a pinned tooltip owns the page until dismissed
     cancelHide();
     clearTimeout(hoverTimer);
     hoverTimer = setTimeout(() => {
@@ -186,6 +187,7 @@
 
   function onLeave(e) {
     clearTimeout(hoverTimer);
+    if (sticky) return; // keep the pinned word lit while its tooltip stays open
     e.currentTarget.classList.remove("ena-active");
     scheduleHide();
   }
@@ -228,7 +230,7 @@
   }
 
   function showTooltip(el) {
-    // Re-hovering the word that already owns the tooltip? just cancel its hide.
+    // same word re-entered within the grace period: keep it, drop the pending hide
     if (activeTooltip && activeEl === el) { cancelHide(); return; }
     removeTooltip();
     activeEl = el;
