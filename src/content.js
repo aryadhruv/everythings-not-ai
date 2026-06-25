@@ -240,13 +240,6 @@
     tip.className = "ena-tooltip";
     tip.setAttribute("data-ena", "tooltip");
     tip.innerHTML = `
-      <div class="ena-tt-controls">
-        <button class="ena-tt-close" type="button" aria-label="Close">
-          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"/>
-          </svg>
-        </button>
-      </div>
       <div class="ena-tt-heuristic">
         <div class="ena-tt-head">
           <span class="ena-tt-raw">"${escapeHtml(el.dataset.raw)}"</span>
@@ -260,7 +253,15 @@
         <div class="ena-tt-blurb">${escapeHtml(el.dataset.blurb)}</div>
         <button class="ena-tt-ask" type="button">Ask a real AI</button>
       </div>
-      <div class="ena-tt-ai"></div>
+      <div class="ena-tt-ai">
+        <div class="ena-tt-controls">
+          <button class="ena-tt-close" type="button" aria-label="Close">
+            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
     `;
     document.body.appendChild(tip);
     positionTooltip(tip, el);
@@ -459,8 +460,9 @@
             btn.disabled = false;
             return;
           }
-          textEl.textContent = resp.answer;
-          tip.querySelector(".ena-tt-controls").prepend(makeCopyButton(resp.answer));
+          const answer = (resp.answer || "").trim();
+          textEl.textContent = answer;
+          tip.querySelector(".ena-tt-controls").prepend(makeCopyButton(answer));
           btn.disabled = false;
         }
       );
