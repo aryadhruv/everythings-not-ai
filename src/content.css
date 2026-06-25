@@ -52,11 +52,18 @@
   to   { opacity: 1; transform: none; }
 }
 
-.ena-tt-close {
-  position: absolute;
-  top: 7px;
-  right: 7px;
+.ena-tt-controls {
+  float: right;
   display: none;
+  align-items: center;
+  gap: 2px;
+  margin: 0 0 4px 10px;
+}
+.ena-sticky .ena-tt-controls { display: flex; }
+
+.ena-tt-close,
+.ena-tt-copy {
+  display: flex;
   padding: 3px;
   background: transparent;
   border: 0;
@@ -64,16 +71,17 @@
   color: #6b7785;
   cursor: pointer;
 }
-.ena-sticky .ena-tt-close { display: flex; }
-.ena-tt-close:hover { color: #e6edf3; background: rgba(255, 255, 255, 0.08); }
-.ena-tt-close svg { width: 15px; height: 15px; display: block; }
+.ena-tt-close:hover,
+.ena-tt-copy:hover { color: #e6edf3; background: rgba(255, 255, 255, 0.08); }
+.ena-tt-close svg,
+.ena-tt-copy svg { width: 15px; height: 15px; display: block; }
+.ena-tt-copy--done { color: #00e5ff; }
 
 .ena-tt-head {
   display: flex;
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
-  padding-right: 22px;
   font-size: 14px;
   margin-bottom: 8px;
 }
@@ -103,6 +111,17 @@
   border-radius: 99px;
 }
 
+.ena-tt-heuristic {
+  overflow: hidden;
+  max-height: 300px;
+  opacity: 1;
+  transition: opacity 0.2s ease, max-height 0.28s ease;
+}
+.ena-tt-heuristic.ena-fading {
+  opacity: 0;
+  max-height: 0;
+}
+
 .ena-tt-blurb {
   color: #c4cfdb;
   margin-bottom: 10px;
@@ -123,10 +142,11 @@
 .ena-tt-ask:hover:not(:disabled) { filter: brightness(1.08); }
 
 .ena-tt-ai {
-  margin-top: 9px;
-  padding-top: 9px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
   color: #d7e0ea;
   font-size: 12.5px;
-  white-space: pre-wrap;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.ena-tt-ai--visible {
+  opacity: 1;
 }
